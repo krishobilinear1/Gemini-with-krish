@@ -1,15 +1,16 @@
-import os, random, json, asyncio, datetime
+import os, json, asyncio, datetime, textwrap
 from PIL import Image, ImageDraw
 import edge_tts
 
-# --- 1. CYBER SECURITY TOPICS - Roz Naya Fraud + Solution ---
+# ========== 1. HAR ROZ NAYA TOPIC - 60 TOPICS, 2 MAHINE NO REPEAT ==========
 TOPICS = [
     "OTP Fraud: OTP maangne wala call aaye to kya kare",
     "UPI Fraud: QR code scan karne se paisa kaise kat jata hai",
+    "Digital Arrest: Fake Police Call se kaise bache",
     "KYC Fraud: Bank se bolke account band hone wala SMS",
     "Job Fraud: Ghar baithe job ke naam pe paise maangna",
     "Lottery Fraud: Aap jeet gaye 25 Lakh wala SMS",
-    "WhatsApp Hack: OTP share karne se WhatsApp hack kaise hota hai",
+    "WhatsApp Hack: OTP share karne se WhatsApp hack",
     "Link Fraud: Parcel delivery wala fake link",
     "Customer Care Fraud: Google se fake number nikalna",
     "Investment Fraud: Double paisa wala Telegram group",
@@ -20,12 +21,10 @@ TOPICS = [
     "ATM Fraud: ATM me card phasne wala fraud",
     "WiFi Fraud: Free WiFi se data kaise chori hota hai",
     "PAN Card Fraud: PAN se loan kaise le lete hai",
-    "Instagram Fraud: Blue tick ke naam pe paise maangna",
     "Loan App Fraud: 5000 ka loan 50000 kaise ban jata hai",
     "Video Call Fraud: Nude video call blackmail se kaise bache",
     "QR Code Fraud: Dukaan pe QR badal dena",
     "Sim Swap Fraud: SIM band hona = bada khatra",
-    "Fake Police Call: Digital Arrest wala naya fraud",
     "OLX Fraud: Army wala buyer ban ke thagna",
     "Captcha Fraud: Work from home typing job wala fraud",
     "Fake SBI Call: Account verify karne wala call",
@@ -34,25 +33,57 @@ TOPICS = [
     "YouTube Earning Fraud: Paise deke subscriber badhana",
     "Ransomware: Phone lock hone pe kya kare",
     "Password Hack: Ek hi password sab jagah rakhna",
+    "Instagram Fraud: Blue tick ke naam pe paise maangna",
+    "Fake Courier Call: Aapke naam pe parcel me drugs hai",
+    "AI Voice Fraud: Bete ki awaaz me call aana - AI Clone",
+    "Deepfake Video Fraud: Celeb ke naam pe fake video",
+    "Fake TRAI Call: Aapka number band ho jayega",
+    "CBI ED Raid Fraud: Ghar pe raid ka darr dikhana",
+    "Part Time Job Fraud: Video like karke paise kamana",
+    "KBC Fraud: KBC me jeet gaye wala WhatsApp",
+    "Matrimonial Fraud: Shaadi ke naam pe thagna",
+    "Crypto Fraud: Crypto me paisa double karne wala",
+    "Fake School Fee Link: Bachhe ke school ka fake link",
+    "FASTag Fraud: FASTag KYC ke naam pe link",
+    "Pension Fraud: Buzurgo ko pension ke naam pe thagna",
+    "Aadhaar Update Fraud: Aadhaar update ke naam pe link",
+    "PM Yojana Fraud: Sarkari yojana ke naam pe form",
+    "Electricity Meter Fraud: Meter badalne wala aaya",
+    "Hospital Bill Fraud: Hospital se fake bill bhejna",
+    "Train Ticket Fraud: Tatkal ticket ke naam pe link",
+    "IRCTC Fraud: Ticket cancel ke naam pe call",
+    "Amazon Order Fraud: Order cancel ke naam pe OTP",
+    "Flipkart Fraud: Prize jeetne wala call",
+    "Google Pay Fraud: Cashback ke naam pe link",
+    "PhonePe Fraud: Paise bhejne ke naam pe PIN maangna",
+    "Paytm KYC Fraud: Paytm band hone wala SMS",
+    "Bank Manager Fraud: Bank manager ban ke call",
+    "RBI Fraud: RBI se bol raha hu wala call",
+    "Income Tax Fraud: Tax refund ke naam pe link",
+    "GST Fraud: GST refund ke naam pe call",
+    "Customs Fraud: Airport pe parcel pakda gaya",
+    "Visa Fraud: Videsh bhejne ke naam pe thagna",
+    "Beti Bachao Fraud: Beti ke naam pe paise maangna",
 ]
 
-# Aaj ka topic - date se choose hoga taaki repeat na ho
 today = datetime.date.today()
-topic = TOPICS[today.toordinal() % len(TOPICS)]
-print(f"Today Topic: {topic}")
+seed = today.year * 10000 + today.month * 100 + today.day
+topic = TOPICS[seed % len(TOPICS)]
+print(f"Date: {today} | Topic: {topic}")
 
-# --- 2. VIRAL SCRIPT - Cyber Awareness 50-60 Sec ---
+# ========== 2. VIRAL SCRIPT - 55 SEC CYBER AWARENESS ==========
 def get_viral_script(topic):
     try:
         from google import genai
         client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
         prompt = f"""
-        You are a Cyber Security Awareness Shorts writer for India.
+        You are Cyber Security Awareness Shorts writer for India.
         Topic: {topic}
-        Write a 55 second Hindi script in Hinglish, simple language for common people.
+        Today Date: {today}
+        Write 55 second Hindi script in Hinglish, simple language for common people.
         Structure:
         1. Start with RUKO! Ye naya fraud chal raha hai...
-        2. Ek chhota sa example batao ki fraud kaise hota hai - 15 sec
+        2. Ek chhota sa real jaisa example batao ki fraud kaise hota hai - 15 sec
         3. Phir 3 clear solution / bachne ke tarike batao - 30 sec
         4. End me bolo: Agar aisa call aaye to turant 1930 pe call karo, aur video share karo taaki sab bach sake.
         Keep tone serious but helpful, not scary. No fake promises.
@@ -67,21 +98,19 @@ def get_viral_script(topic):
 script_text = get_viral_script(topic)
 print(script_text)
 
-# --- 3. VOICEOVER - Ladke ki awaaz, thodi slow taaki samajh aaye ---
+# ========== 3. VOICEOVER ==========
 async def make_voice():
     communicate = edge_tts.Communicate(script_text, "hi-IN-MadhurNeural", rate="+5%")
     await communicate.save("voice.mp3")
 asyncio.run(make_voice())
 
-# --- 4. VIDEO BANANA ---
+# ========== 4. VIDEO BANANA - 50-60 SEC ==========
 from moviepy import AudioFileClip, TextClip, CompositeVideoClip, ColorClip
-import textwrap
 
 audio = AudioFileClip("voice.mp3")
 duration = max(50, min(62, audio.duration + 1))
 print(f"Video Duration: {duration} sec")
 
-# Background - Dark Red/Black Cyber Theme
 bg = ColorClip(size=(1080, 1920), color=(15, 0, 0), duration=duration)
 
 title_clip = TextClip(
@@ -109,7 +138,7 @@ final = CompositeVideoClip([bg, title_clip, topic_clip, cta_clip])
 final = final.with_audio(audio)
 final.write_videofile("short.mp4", fps=24, codec="libx264", audio_codec="aac")
 
-# --- 5. THUMBNAIL ---
+# ========== 5. THUMBNAIL ==========
 img = Image.new("RGB", (1080, 1920), (180, 0, 0))
 d = ImageDraw.Draw(img)
 d.text((80, 600), "CYBER\nFRAUD!", fill=(255,255,255))
@@ -117,7 +146,7 @@ d.text((80, 1000), "BACH KE\nRAHO!", fill=(255,255,0))
 d.text((80, 1400), "1930 PE CALL KARO", fill=(255,255,255))
 img.save("thumbnail.jpg")
 
-# --- 6. UPLOAD INFO SAVE KARNA ---
+# ========== 6. UPLOAD INFO SAVE ==========
 title = f"Ye Naya Fraud Chal Raha Hai! 😱 {topic} | Bachne Ka Tarika | Fixzology"
 description = f"""{title}
 
