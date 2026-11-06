@@ -1,0 +1,23 @@
+name: Daily YouTube Shorts Runner
+
+on:
+  schedule:
+    # रोज़ाना दोपहर 1:30 PM IST पर अपने आप चलेगा
+    - cron: '0 8 * * *'
+  workflow_dispatch: # मैन्युअल टेस्ट बटन
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: sudo apt update && sudo apt install -y ffmpeg
+      - run: pip install -r requirements.txt
+      - name: ऑटोमेशन पाइपलाइन चलाएं
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+        run: python automation.py
