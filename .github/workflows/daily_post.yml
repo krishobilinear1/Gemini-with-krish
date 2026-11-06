@@ -16,7 +16,8 @@ run: |
 python -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
-pip install google-genai edge-tts moviepy pillow requests
+pip install google-genai edge-tts moviepy
+pillow requests
 ​- name: Run automation
 env:
 GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
