@@ -11,7 +11,7 @@ from google.oauth2.credentials import Credentials
 
 # 1. Gemini AI को टेक नीश के लिए सेट करना
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 prompt = """
 तुम भारत के शीर्ष टेक और AI क्रिएटर हो। 
