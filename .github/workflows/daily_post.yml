@@ -19,3 +19,4 @@ jobs:
           pip install --upgrade pip
           pip install moviepy
           python automation.py
+          pip install htts
