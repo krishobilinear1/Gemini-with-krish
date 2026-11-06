@@ -18,5 +18,5 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
-          pip install moviepy edge_tts pillow requests
+          pip install moviepy edge_tts pillow requests google-generativeai
           python automation.py
