@@ -1,4 +1,4 @@
-google-generativeai=0.72
+google-genai
 edge-tts
 google-api-python-client
 google-auth-oauthlib
