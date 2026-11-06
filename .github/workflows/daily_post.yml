@@ -1,25 +1,26 @@
-name: Daily YouTube Shorts Runner
-
-on:
-  schedule:
-    - cron: '0 8 * * *'
-  workflow_dispatch:
-
-jobs:
-  build-and-upload:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Setup environment and run script
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install wheel
-          pip install moviepy==2.1.1 edge_tts pillow requests google-generativeai
-          python automation.py
+​name: Daily Youtube Shorts Runner
+​on:
+schedule:
+- cron: '0 8 * * *'
+workflow_dispatch:
+​jobs:
+build-and-upload:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+- uses: actions/setup-python@v5
+with:
+python-version: '3.11'
+​- name: Install dependencies
+run: |
+python -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install google-genai edge-tts moviepy pillow requests
+​- name: Run automation
+env:
+GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+run: |
+source venv/bin/activate
+python automation.py
