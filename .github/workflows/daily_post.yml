@@ -1,26 +1,27 @@
 name: Daily Youtube Shorts Runner
 on:
-schedule:
-- cron: '0 8 * * *'
-workflow_dispatch:
+  schedule:
+    - cron: '30 0 * * *'  # Roz Subah 6:00 AM IST - 00:30 UTC
+  workflow_dispatch:
 jobs:
-build-and-upload:
-runs-on: ubuntu-latest
-steps:
-- uses: actions/checkout@v4
-- uses: actions/setup-python@v5
-with:
-python-version: '3.11'
-- name: Install dependencies
-run: |
-python -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install google-genai edge-tts moviepy pillow requests
-- name: Run automation
-env:
-GOOGLE_API_KEY: {{ secrets.GOOGLE_API_KEY }}
-YOUTUBE_TOKEN_JSON: {{ secrets.YOUTUBE_TOKEN_JSON }}
-run: |
-source venv/bin/activate
-python automation.py
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install google-genai edge-tts moviepy pillow requests google-api-python-client google-auth-oauthlib
+      - name: Run automation
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+        run: |
+          source venv/bin/activate
+          python automation.py
+          python upload.py
