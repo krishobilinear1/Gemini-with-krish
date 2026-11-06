@@ -16,19 +16,15 @@ request = youtube.videos().insert(
             "title": info["title"][:100],
             "description": info["description"],
             "tags": info["tags"],
-            "categoryId": "27", # Education
+            "categoryId": "27",
             "defaultLanguage": "hi",
         },
-        "status": {
-            "privacyStatus": "public",
-            "selfDeclaredMadeForKids": False,
-        }
+        "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
     },
     media_body=MediaFileUpload("short.mp4", chunksize=-1, resumable=True)
 )
 res = request.execute()
 print(f"UPLOADED! Video ID: {res['id']}")
 
-# Thumbnail lagana
 youtube.thumbnails().set(videoId=res['id'], media_body=MediaFileUpload("thumbnail.jpg")).execute()
 print("Thumbnail lag gaya!")
