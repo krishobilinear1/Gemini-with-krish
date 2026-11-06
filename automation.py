@@ -89,7 +89,7 @@ def get_viral_script(topic):
         Keep tone serious but helpful, not scary. No fake promises.
         Only give script, no extra text. 130-150 words max.
         """
-        res = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        res = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
         return res.text.strip()
     except Exception as e:
         print(f"Gemini fail, backup: {e}")
@@ -104,7 +104,7 @@ async def make_voice():
     await communicate.save("voice.mp3")
 asyncio.run(make_voice())
 
-# ========== 4. VIDEO BANANA - 50-60 SEC ==========
+# ========== 4. VIDEO BANANA - 50-60 SEC - FONT FIX KE SAATH ==========
 from moviepy import AudioFileClip, TextClip, CompositeVideoClip, ColorClip
 
 audio = AudioFileClip("voice.mp3")
@@ -113,23 +113,27 @@ print(f"Video Duration: {duration} sec")
 
 bg = ColorClip(size=(1080, 1920), color=(15, 0, 0), duration=duration)
 
+# FIXED FONT PATH - GitHub Server Wala
+FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT_NORMAL = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+
 title_clip = TextClip(
-    font="DejaVu-Sans-Bold",
-    text="RUKO! YE NAYA FRAUD HAI! ⚠️",
+    font=FONT_BOLD,
+    text="RUKO! YE NAYA FRAUD HAI!",
     font_size=80, color="yellow",
     size=(950, None), method="caption"
 ).with_position(("center", 180)).with_duration(duration)
 
 topic_clip = TextClip(
-    font="DejaVu-Sans",
+    font=FONT_NORMAL,
     text="\n".join(textwrap.wrap(topic, width=28)),
     font_size=58, color="white",
     size=(900, None), method="caption"
 ).with_position(("center", 750)).with_duration(duration)
 
 cta_clip = TextClip(
-    font="DejaVu-Sans-Bold",
-    text="1930 PE CALL KARO\nShare Karo - Sabko Bachao 👇\nFollow @ Fixzology",
+    font=FONT_BOLD,
+    text="1930 PE CALL KARO\nShare Karo - Sabko Bachao\nFollow @ Fixzology",
     font_size=62, color="white",
     size=(900, None), method="caption", bg_color="red"
 ).with_position(("center", 1480)).with_duration(duration)
@@ -147,12 +151,12 @@ d.text((80, 1400), "1930 PE CALL KARO", fill=(255,255,255))
 img.save("thumbnail.jpg")
 
 # ========== 6. UPLOAD INFO SAVE ==========
-title = f"Ye Naya Fraud Chal Raha Hai! 😱 {topic} | Bachne Ka Tarika | Fixzology"
+title = f"Ye Naya Fraud Chal Raha Hai! {topic} | Bachne Ka Tarika | Fixzology"
 description = f"""{title}
 
 {script_text}
 
-⚠️ Agar aapke saath fraud ho jaye to turant:
+Agar aapke saath fraud ho jaye to turant:
 1. 1930 (National Cyber Helpline) pe call karo
 2. cybercrime.gov.in pe complaint karo
 3. Bank ko turant inform karo
