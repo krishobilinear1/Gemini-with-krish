@@ -6,7 +6,18 @@ from googleapiclient.http import MediaFileUpload
 with open("upload_info.json", encoding="utf-8") as f:
     info = json.load(f)
 
-creds = Credentials.from_authorized_user_info(json.loads(os.environ["YOUTUBE_TOKEN_JSON"]), scopes=["https://www.googleapis.com/auth/youtube.upload"])
+# --- FIX: Token me agar Enter / Space aa gaya ho to saaf karo ---
+raw_token = os.environ["YOUTUBE_TOKEN_JSON"].strip()
+# Agar token me asli newline hai to usko hata do
+try:
+    token_data = json.loads(raw_token, strict=False)
+except:
+    # Double escaping fix
+    token_data = json.loads(raw_token.encode().decode('unicode_escape'), strict=False)
+
+print(f"Token loaded OK for: {token_data.get('client_id','')[:20]}...")
+
+creds = Credentials.from_authorized_user_info(token_data, scopes=["https://www.googleapis.com/auth/youtube.upload"])
 youtube = build("youtube", "v3", credentials=creds)
 
 request = youtube.videos().insert(
