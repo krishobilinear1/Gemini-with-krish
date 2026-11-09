@@ -18,3 +18,13 @@ imageio-ffmpeg
 pydub
 faster-whisper
 TTS
+moviepy==1.0.3
+edge-tts
+Pillow
+numpy
+imageio
+imageio-ffmpeg
+pydub
+faster-whisper
+f5-tts
+TTS
