@@ -7,4 +7,5 @@ Pillow
 numpy
 imageio
 imageio-ffmpeg
+pydub
 TTS
