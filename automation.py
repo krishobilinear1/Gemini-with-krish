@@ -12,7 +12,7 @@ from f5_tts.infer.utils_infer import infer_process, load_model, load_vocoder
 OUTPUT_DIR = "output"
 ASSETS_DIR = "assets"
 REFERENCE_VOICE = f"{ASSETS_DIR}/voice_sample.ogg" # Your GitHub voice clone
-AVATAR_IMAGE = f"{ASSETS_DIR}/avatar.png"          # Your single photo avatar
+AVATAR_IMAGE = f"{ASSETS_DIR}/avatar.jpg"          # Your single photo avatar
 
 VIDEO_WIDTH = 1920
 VIDEO_HEIGHT = 1080
