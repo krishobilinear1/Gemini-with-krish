@@ -48,7 +48,7 @@ req = youtube.videos().insert(
             "categoryId": "28"
         },
         "status": {
-            "privacyStatus": "public",
+            "privacyStatus": "unlisted",
             "madeForKids": False,
             "selfDeclaredMadeForKids": False
         }
