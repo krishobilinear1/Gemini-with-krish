@@ -12,6 +12,13 @@ if not os.path.exists("thumbnail.jpg"):
         img = img.convert("RGB")
         img.save("thumbnail.jpg", "JPEG")
         print("Thumbnail ban gaya bg.png se")
+    elif os.path.exists("avatar.jpg"):
+        # bg nahi hai to avatar hi thumbnail bana do
+        from PIL import Image
+        img = Image.open("avatar.jpg")
+        img = img.convert("RGB")
+        img.save("thumbnail.jpg", "JPEG")
+        print("Thumbnail ban gaya avatar.jpg se")
     else:
         print("bg.png bhi nahi mila, thumbnail skip")
 
@@ -22,14 +29,22 @@ token_info = json.loads(os.environ["YOUTUBE_TOKEN_JSON"])
 creds = Credentials.from_authorized_user_info(token_info)
 youtube = build("youtube", "v3", credentials=creds)
 
-print("Uploading short.mp4...")
+# VIDEO KA SAHI NAAM LO - automation.py se jo bana hai
+video_file = info.get("video", "short.mp4")
+print(f"Uploading {video_file}...")
+
+# Agar videos/ folder wali file hai to usko short.mp4 bana do, ya wahi upload karo
+if not os.path.exists(video_file):
+    print(f"{video_file} nahi mila, short.mp4 dhoondh raha hu")
+    video_file = "short.mp4"
+
 req = youtube.videos().insert(
     part="snippet,status",
     body={
         "snippet": {
             "title": info["title"],
             "description": info["description"],
-            "tags": info["tags"],
+            "tags": info.get("tags", ["AI", "Tech", "CyberSecurity", "Hindi"]),
             "categoryId": "28"
         },
         "status": {
@@ -38,7 +53,7 @@ req = youtube.videos().insert(
             "selfDeclaredMadeForKids": False
         }
     },
-    media_body=MediaFileUpload("short.mp4", chunksize=-1, resumable=True)
+    media_body=MediaFileUpload(video_file, chunksize=-1, resumable=True)
 )
 res = req.execute()
 video_id = res["id"]
@@ -52,9 +67,3 @@ if os.path.exists("thumbnail.jpg"):
             media_body=MediaFileUpload("thumbnail.jpg")
         ).execute()
         print("Thumbnail lag gaya!")
-    except Exception as e:
-        print(f"Thumbnail fail, par video upload ho gaya: {e}")
-else:
-    print("Thumbnail nahi mila, video bina thumbnail ke upload hua")
-
-print("DONE! ALL FINISHED")
