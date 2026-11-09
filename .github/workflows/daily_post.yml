@@ -1,26 +1,31 @@
-name: Daily Youtube Shorts Runner
+name: build-and-upload
+
 on:
-  schedule:
-    - cron: '30 0 * * *'  # Roz Subah 6:00 AM IST
   workflow_dispatch:
+
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y fonts-dejavu-core ffmpeg
           python -m venv venv
-          venv/bin/pip install --upgrade pip setuptools wheel
+          venv/bin/pip install --upgrade pip
           venv/bin/pip install -r requirements.txt
+
       - name: Run automation
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
         run: |
           venv/bin/python automation.py
-          venv/bin/python upload.py
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
