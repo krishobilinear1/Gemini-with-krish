@@ -36,8 +36,8 @@ def generate_voice(script_text, output_audio_path):
     temp_raw = output_audio_path.replace(".wav", "_raw.wav")
     
     async def generate_voice(script, audio_file):
-    print("Generating cloned voice...")
-    try:
+       print("Generating cloned voice...")
+       try:
         # F5-TTS - AAPKI ASLI AWAZ wala kaam
         from f5_tts.infer.utils_infer import infer_process, load_model, load_vocoder
 
