@@ -1,3 +1,10 @@
 setuptools
 edge-tts
 requests
+moviepy==1.0.3
+edge-tts
+Pillow
+numpy
+imageio
+imageio-ffmpeg
+TTS
