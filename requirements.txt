@@ -28,3 +28,13 @@ pydub
 faster-whisper
 f5-tts
 TTS
+numpy>=2.0
+moviepy==1.0.3
+edge-tts
+Pillow
+imageio
+imageio-ffmpeg
+pydub
+faster-whisper
+TTS
+f5-tts
