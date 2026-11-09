@@ -67,3 +67,9 @@ if os.path.exists("thumbnail.jpg"):
             media_body=MediaFileUpload("thumbnail.jpg")
         ).execute()
         print("Thumbnail lag gaya!")
+    except Exception as e:
+        print(f"Thumbnail fail, par video upload ho gaya: {e}")
+else:
+    print("Thumbnail nahi mila, video bina thumbnail ke upload hua")
+
+print("DONE! ALL FINISHED")
