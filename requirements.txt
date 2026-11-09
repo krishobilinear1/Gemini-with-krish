@@ -5,3 +5,4 @@ google-auth-oauthlib==1.2.1
 Pillow==10.4.0
 moviepy==1.0.3
 numpy==1.26.4
+edge-tts
