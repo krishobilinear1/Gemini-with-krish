@@ -1,11 +1,12 @@
 # automation.py - TALKING AVATAR - FREE WALA - FINAL
 # Avatar = avatar.jpg - FIXED, Bolega
-# Voice = hi-IN-MadhurNeural - Aapki Awaz ke sabse paas - FIXED 1.20x
+# Voice = voice_sample.ogg - KRISHNA KI ASLI AWAZ - CLONE - FIXED 1.20x
 
 import os, json, random, datetime, asyncio
 
 # --- LOCKED - MAT BADALNA ---
 AVATAR_PHOTO = "avatar.jpg"  # Aapki Suit wali photo
+VOICE_SAMPLE = "voice_sample.ogg"  # Tumhari asli awaz
 VOICE_SPEED = "+20%"  # 1.20x Speed
 USED_FILE = "used_topics.json"
 OUTPUT_FOLDER = "videos"
@@ -55,15 +56,18 @@ def make_script(topic):
     return script
 
 async def make_voice(script, audio_file):
-    import edge_tts
-    communicate = edge_tts.Communicate(
-        script,
-        voice="hi-IN-MadhurNeural",
-        rate=VOICE_SPEED,
-        pitch="+0Hz"
-    )
-    await communicate.save(audio_file)
-    print(f"Awaz ban gayi: {audio_file}")
+    # KRISHNA KI ASLI AWAZ - voice_sample.ogg se clone
+    print("Krishna ki asli awaz se bol raha hai...")
+    try:
+        from TTS.api import TTS
+        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
+        tts.tts_to_file(text=script, speaker_wav=VOICE_SAMPLE, language="hi", file_path=audio_file)
+        print(f"Awaz ban gayi - TUMHARI AWAZ: {audio_file}")
+    except Exception as e:
+        print(f"Clone me dikkat, Madhur se bana raha hu: {e}")
+        import edge_tts
+        communicate = edge_tts.Communicate(script, voice="hi-IN-MadhurNeural", rate=VOICE_SPEED, pitch="+0Hz")
+        await communicate.save(audio_file)
 
 def make_talking_video(avatar_path, audio_path, output_path):
     # FREE WALA TALKING AVATAR - Wav2Lip Style
