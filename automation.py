@@ -1,173 +1,105 @@
-import os, json, asyncio, datetime, textwrap
-from PIL import Image, ImageDraw
-import edge_tts
+import os, json, random, datetime
+from gtts import gTTS
 
-# ========== 1. HAR ROZ NAYA TOPIC - 60 TOPICS, 2 MAHINE NO REPEAT ==========
-TOPICS = [
-    "OTP Fraud: OTP maangne wala call aaye to kya kare",
-    "UPI Fraud: QR code scan karne se paisa kaise kat jata hai",
-    "Digital Arrest: Fake Police Call se kaise bache",
-    "KYC Fraud: Bank se bolke account band hone wala SMS",
-    "Job Fraud: Ghar baithe job ke naam pe paise maangna",
-    "Lottery Fraud: Aap jeet gaye 25 Lakh wala SMS",
-    "WhatsApp Hack: OTP share karne se WhatsApp hack",
-    "Link Fraud: Parcel delivery wala fake link",
-    "Customer Care Fraud: Google se fake number nikalna",
-    "Investment Fraud: Double paisa wala Telegram group",
-    "Aadhaar Fraud: Aadhaar OTP se SIM kaise nikal lete hai",
-    "Screen Sharing Fraud: AnyDesk download karane wala scam",
-    "Electricity Bill Fraud: Bijli katne wala SMS",
-    "Facebook Hack: Friend ke naam se paisa maangna",
-    "ATM Fraud: ATM me card phasne wala fraud",
-    "WiFi Fraud: Free WiFi se data kaise chori hota hai",
-    "PAN Card Fraud: PAN se loan kaise le lete hai",
-    "Loan App Fraud: 5000 ka loan 50000 kaise ban jata hai",
-    "Video Call Fraud: Nude video call blackmail se kaise bache",
-    "QR Code Fraud: Dukaan pe QR badal dena",
-    "Sim Swap Fraud: SIM band hona = bada khatra",
-    "OLX Fraud: Army wala buyer ban ke thagna",
-    "Captcha Fraud: Work from home typing job wala fraud",
-    "Fake SBI Call: Account verify karne wala call",
-    "UPI Collect Request Fraud: Paise aane ki jagah katna",
-    "Play Store Fraud: Nakli app se bank khali",
-    "YouTube Earning Fraud: Paise deke subscriber badhana",
-    "Ransomware: Phone lock hone pe kya kare",
-    "Password Hack: Ek hi password sab jagah rakhna",
-    "Instagram Fraud: Blue tick ke naam pe paise maangna",
-    "Fake Courier Call: Aapke naam pe parcel me drugs hai",
-    "AI Voice Fraud: Bete ki awaaz me call aana - AI Clone",
-    "Deepfake Video Fraud: Celeb ke naam pe fake video",
-    "Fake TRAI Call: Aapka number band ho jayega",
-    "CBI ED Raid Fraud: Ghar pe raid ka darr dikhana",
-    "Part Time Job Fraud: Video like karke paise kamana",
-    "KBC Fraud: KBC me jeet gaye wala WhatsApp",
-    "Matrimonial Fraud: Shaadi ke naam pe thagna",
-    "Crypto Fraud: Crypto me paisa double karne wala",
-    "Fake School Fee Link: Bachhe ke school ka fake link",
-    "FASTag Fraud: FASTag KYC ke naam pe link",
-    "Pension Fraud: Buzurgo ko pension ke naam pe thagna",
-    "Aadhaar Update Fraud: Aadhaar update ke naam pe link",
-    "PM Yojana Fraud: Sarkari yojana ke naam pe form",
-    "Electricity Meter Fraud: Meter badalne wala aaya",
-    "Hospital Bill Fraud: Hospital se fake bill bhejna",
-    "Train Ticket Fraud: Tatkal ticket ke naam pe link",
-    "IRCTC Fraud: Ticket cancel ke naam pe call",
-    "Amazon Order Fraud: Order cancel ke naam pe OTP",
-    "Flipkart Fraud: Prize jeetne wala call",
-    "Google Pay Fraud: Cashback ke naam pe link",
-    "PhonePe Fraud: Paise bhejne ke naam pe PIN maangna",
-    "Paytm KYC Fraud: Paytm band hone wala SMS",
-    "Bank Manager Fraud: Bank manager ban ke call",
-    "RBI Fraud: RBI se bol raha hu wala call",
-    "Income Tax Fraud: Tax refund ke naam pe link",
-    "GST Fraud: GST refund ke naam pe call",
-    "Customs Fraud: Airport pe parcel pakda gaya",
-    "Visa Fraud: Videsh bhejne ke naam pe thagna",
-    "Beti Bachao Fraud: Beti ke naam pe paise maangna",
+# ===== 5 VIDEO KA MIX - 30 SUPER HOOKS =====
+HOOKS = [
+    ("SAVDHAN! Ye App Chupke Se Paisa Chura Raha Hai", "SAVDHAN!"),
+    ("Ye Fraud 99% Logo Ko Nahi Pata", "99% KO NAHI PATA"),
+    ("Police Bhi Hairaan! Naya Scam Aa Gaya", "POLICE HAIRAAN"),
+    ("New Launch Ne Sabko Hila Diya!", "NEW LAUNCH!"),
+    ("Ye Link Khola To Bank Khali!", "LINK MAT KHOLNA"),
+    ("Aadhaar Walo Ke Liye Sabse Bada Khatra!", "AADHAAR KHATRA"),
+    ("WhatsApp Pe Ye Msg Aaye To Delete Karo", "DELETE KARO!"),
+    ("Bank Wala Call Aaye To Ye Mat Bolna", "BANK FRAUD"),
+    ("AI Ne Ye Kaand Kar Diya!", "AI KAAND!"),
+    ("Ye Trick Sirf Hacker Jante Hain", "HACKER TRICK"),
+    ("Raat Ko Sote Time Ye Ho Raha Hai!", "RAAT KA SCAM"),
+    ("UPI Se Paisa Bhejte Ho? To Ye Dekho", "UPI FRAUD!"),
+    ("Instagram Pe Ye Ladki Asli Nahi Hai!", "FAKE ID!"),
+    ("Free Recharge Ke Chakkar Me Lakhon Gaye", "FREE KA DHOKHA"),
+    ("Ye Naya AI Phone Sabka Baap Nikla!", "AI PHONE!"),
+    ("OTP Kisi Ko Mat Dena, Warna Ye Hoga", "OTP SCAM"),
+    ("Ye 1 Setting ON Kar Lo, Hacker Nahi Ghus Payega", "SETTING ON KARO"),
+    ("Play Store Se Ye App Abhi Delete Karo!", "DELETE NOW!"),
+    ("Ye Video Dekh Ke Dimaag Hil Jayega", "DIMAAG HIL JAYEGA"),
+    ("Job Ke Naam Pe Itna Bada Fraud!", "JOB FRAUD"),
+    ("WiFi Se Ye Kaam Kiya To Paisa Gaya", "WIFI KHATRA"),
+    ("Ye Company Raat-o-Raat Crorepati Kaise Bani?", "SECRET REVEAL"),
+    ("Tumhara Phone Hack Hai? Ye 3 Sign Check Karo", "HACK CHECK"),
+    ("Ye Naya Feature Aate Hi Sab Pagal Ho Gaye", "NEW FEATURE!"),
+    ("Loan App Walo Ka Asli Sach Aa Gaya", "LOAN APP EXPOSED"),
+    ("Ye Photo Bheji To Fas Gaye!", "PHOTO FRAUD"),
+    ("Google Pe Ye Cheez Kabhi Search Mat Karna", "GOOGLE SECRET"),
+    ("Ye Baccha 16 Saal Me Hacker Kaise Ban Gaya?", "16 SAAL KA HACKER"),
+    ("Kya Tumhara Data Dark Web Pe Bik Raha Hai?", "DATA LEAK!"),
+    ("Is Video Ke Baad Tum Kabhi Fraud Me Nahi Fasoge", "FULL SAFE"),
 ]
 
-today = datetime.date.today()
-seed = today.year * 10000 + today.month * 100 + today.day
-topic = TOPICS[seed % len(TOPICS)]
-print(f"Date: {today} | Topic: {topic}")
+# ===== RETENTION LOOP - HAR 5 SEC ME NAYA TWIST =====
+MID_HOOKS = [
+    "Ruko ruko, sabse khatarnak wala to abhi baaki hai!",
+    "Ye wala sun ke tumhare hosh ud jayenge!",
+    "Teesra wala to sabse zyada khatarnak hai, usko miss mat karna!",
+    "Aage jo bataunga na, wo 99 percent logo ko nahi pata!",
+    "Video ko skip mat karna, aakhri wala point tumhara paisa bachayega!",
+]
 
-# ========== 2. VIRAL SCRIPT - 55 SEC CYBER AWARENESS ==========
-def get_viral_script(topic):
-    try:
-        from google import genai
-        client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-        prompt = f"""
-        You are Cyber Security Awareness Shorts writer for India.
-        Topic: {topic}
-        Today Date: {today}
-        Write 55 second Hindi script in Hinglish, simple language for common people.
-        Structure:
-        1. Start with RUKO! Ye naya fraud chal raha hai...
-        2. Ek chhota sa real jaisa example batao ki fraud kaise hota hai - 15 sec
-        3. Phir 3 clear solution / bachne ke tarike batao - 30 sec
-        4. End me bolo: Agar aisa call aaye to turant 1930 pe call karo, aur video share karo taaki sab bach sake.
-        Keep tone serious but helpful, not scary. No fake promises.
-        Only give script, no extra text. 130-150 words max.
-        """
-        res = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
-        return res.text.strip()
-    except Exception as e:
-        print(f"Gemini fail, backup: {e}")
-        return f"RUKO! Ye naya fraud chal raha hai - {topic}. Isme chor aapko dara ke ya lalach deke OTP ya link bhejta hai. Yaad rakho, pehla - Bank kabhi OTP nahi maangta. Dusra - Kisi bhi anjaan link pe click mat karo. Teesra - Koi QR scan karne se paisa nahi aata, paisa kat ta hai. Agar aisa call aaye to turant 1930 pe call karo. Ye video apne parivaar ko bhej do taaki wo bach sake. Follow karo Fixzology ko roz naye fraud se bachne ke liye."
+OUTROS = [
+    "Aur haan, aise hi video ke liye Subscribe kar lo, kyunki kal wala video isse bhi zyada khatarnak hoga! Aur ruko, pehla point phir se sun lo, wo sabse important tha!",
+    "Ek Subscribe to banta hai yaar! Bell icon dabana mat bhoolna, warna agla scam tumko pata bhi nahi chalega!",
+    "Video ko us dost ko bhejo jo har link pe click kar deta hai! Aur Subscribe karke hi jaana!",
+    "Comment me batao, tumhare saath kabhi aisa hua hai? Subscribe karke hi jaana, warna YouTube ye video phir nahi dikhayega!",
+]
 
-script_text = get_viral_script(topic)
-print(script_text)
+def main():
+    day = datetime.datetime.now().day
+    hook_title, thumb_text = HOOKS[(day-1) % 30]
+    mid = random.choice(MID_HOOKS)
+    outro = random.choice(OUTROS)
 
-# ========== 3. VOICEOVER ==========
-async def make_voice():
-    communicate = edge_tts.Communicate(script_text, "hi-IN-MadhurNeural", rate="+5%")
-    await communicate.save("voice.mp3")
-asyncio.run(make_voice())
+    # ===== SUPER EXCITING SCRIPT - MIXING OF ALL 5 VIDEOS =====
+    # Style: Tez + Dar + 3 Point + Loop + Bada Caption jaisa bolna
+    script = f"""Ruko! Ruko! Ruko! Video ko skip mat karna!
 
-# ========== 4. VIDEO BANANA - 50-60 SEC - FONT FIX KE SAATH ==========
-from moviepy import AudioFileClip, TextClip, CompositeVideoClip, ColorClip
+{hook_title}!
 
-audio = AudioFileClip("voice.mp3")
-duration = max(50, min(62, audio.duration + 1))
-print(f"Video Duration: {duration} sec")
+Haan bhai, tumne bilkul sahi suna! Abhi abhi jo khabar aayi hai na, usko sunkar mera to dimaag hi hil gaya!
 
-bg = ColorClip(size=(1080, 1920), color=(15, 0, 0), duration=duration)
+Dekho, aaj kal log itne smart ho gaye hain, unko lagta hai unke saath kabhi fraud nahi ho sakta. Par jo naya tarika aaya hai na, usme to padhe-likhe log bhi fas rahe hain!
 
-# FIXED FONT PATH - GitHub Server Wala
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_NORMAL = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+Socho, tum aaram se baithe ho, chai pee rahe ho, aur achanak ek message aata hai. Bas, ek click... aur khel khatam!
 
-title_clip = TextClip(
-    font=FONT_BOLD,
-    text="RUKO! YE NAYA FRAUD HAI!",
-    font_size=80, color="yellow",
-    size=(950, None), method="caption"
-).with_position(("center", 180)).with_duration(duration)
+{mid}
 
-topic_clip = TextClip(
-    font=FONT_NORMAL,
-    text="\n".join(textwrap.wrap(topic, width=28)),
-    font_size=58, color="white",
-    size=(900, None), method="caption"
-).with_position(("center", 750)).with_duration(duration)
+Pehli cheez - Anjaan link pe kabhi click mat karna, chahe wo tumhare dost ke naam se hi kyun na aaya ho!
 
-cta_clip = TextClip(
-    font=FONT_BOLD,
-    text="1930 PE CALL KARO\nShare Karo - Sabko Bachao\nFollow @ Fixzology",
-    font_size=62, color="white",
-    size=(900, None), method="caption", bg_color="red"
-).with_position(("center", 1480)).with_duration(duration)
+Dusri cheez - OTP! Bhai OTP to apni jaan se bhi zyada sambhal ke rakhna! Bank wala kabhi OTP nahi maangta, jo maange samajh jao fraud hai!
 
-final = CompositeVideoClip([bg, title_clip, topic_clip, cta_clip])
-final = final.with_audio(audio)
-final.write_videofile("short.mp4", fps=24, codec="libx264", audio_codec="aac")
+Aur teesri aur sabse important cheez - Agar koi tumko darake bole ki tumhara account band ho jayega, tumhara paisa atak jayega, to samajh jao, wahi fraud hai! Darna mat, seedha call kaat dena!
 
-# ========== 5. THUMBNAIL ==========
-img = Image.new("RGB", (1080, 1920), (180, 0, 0))
-d = ImageDraw.Draw(img)
-d.text((80, 600), "CYBER\nFRAUD!", fill=(255,255,255))
-d.text((80, 1000), "BACH KE\nRAHO!", fill=(255,255,0))
-d.text((80, 1400), "1930 PE CALL KARO", fill=(255,255,255))
-img.save("thumbnail.jpg")
+Bhai, ye video sirf tumhare liye nahi hai, ye tumhare mummy-papa, dost, sabke liye hai! Isliye isko share zaroor karna!
 
-# ========== 6. UPLOAD INFO SAVE ==========
-title = f"Ye Naya Fraud Chal Raha Hai! {topic} | Bachne Ka Tarika | Fixzology"
-description = f"""{title}
-
-{script_text}
-
-Agar aapke saath fraud ho jaye to turant:
-1. 1930 (National Cyber Helpline) pe call karo
-2. cybercrime.gov.in pe complaint karo
-3. Bank ko turant inform karo
-
-Ye video apne Mummy-Papa aur Dosto ko zaroor bhejo, taaki wo is fraud se bach sake!
-
-Roz naya Fraud + Solution ke liye Follow karo!
-
-#CyberSecurity #OnlineFraud #Fixzology #CyberCrime #FraudAlert #1930 #Awareness
+{outro}
 """
-with open("upload_info.json", "w", encoding="utf-8") as f:
-    json.dump({"title": title, "description": description, "topic": topic, "tags": ["cyber security", "online fraud", "fraud se kaise bache", "cyber awareness hindi", "1930 helpline", "upi fraud", "otp fraud", "fixzology"]}, f, ensure_ascii=False)
+    script = script.strip()
+    print(f"HOOK: {hook_title}")
+    print(f"MID: {mid}")
 
-print("DONE! Video ban gaya - short.mp4")
+    # Voice - FAST, STYLISH, EXCITING
+    tts = gTTS(text=script, lang='hi', slow=False)
+    tts.save("voice.mp3")
+
+    info = {
+        "title": f"{hook_title} | #Shorts",
+        "description": f"{hook_title}\n\nAaj ki is video me maine bataya hai naya fraud, cyber attack aur new launch ke baare me. Poora video dekho warna pachtaoge!\n\n3 Point Yaad Rakhna:\n1. Anjaan Link Mat Kholo\n2. OTP Kabhi Mat Do\n3. Darane Wale Call Se Bacho\n\nYe video sirf awareness ke liye hai.",
+        "tags": ["shorts", "cyber security", "fraud", "tech news", "hindi", "viral shorts", "new launch", "hacking"],
+        "thumb_text": thumb_text,
+        "script": script,
+        "hook": hook_title
+    }
+    with open("upload_info.json", "w", encoding="utf-8") as f:
+        json.dump(info, f, ensure_ascii=False, indent=2)
+    print("DONE! SUPER EXCITING Script ban gaya - Viewer chipak jayega!")
+
+if __name__ == "__main__":
+    main()
