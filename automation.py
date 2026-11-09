@@ -115,9 +115,9 @@ def main():
     desc = f"""{topic}\n\n{script}\n\n#AI #Tech #CyberSecurity"""
     with open(f"{OUTPUT_FOLDER}/description_{today}.txt", "w", encoding="utf-8") as f:
         f.write(desc)
-    # UPLOAD KE LIYE - upload_info.json banana jaruri hai
+    # UPLOAD KE LIYE - upload_info.json banana jaruri hai - TAGS KE SAATH
     with open("upload_info.json", "w", encoding="utf-8") as f:
-        json.dump({"title": topic, "description": desc, "video": video_file}, f)
+        json.dump({"title": topic, "description": desc, "video": video_file, "tags": ["AI", "Tech", "CyberSecurity", "Hindi"]}, f)
     print("HO GAYA! Talking Avatar Video Ready!")
 
 if __name__ == "__main__":
