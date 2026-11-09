@@ -4,6 +4,14 @@
 
 import os, json, random, datetime, asyncio
 
+# --- ANTIALIAS FIX - Pillow 10 wali galti ke liye ---
+try:
+    import PIL.Image
+    if not hasattr(PIL.Image, 'ANTIALIAS'):
+        PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
+except:
+    pass
+
 # --- LOCKED - MAT BADALNA ---
 AVATAR_PHOTO = "avatar.jpg"  # Aapki Suit wali photo
 VOICE_SAMPLE = "voice_sample.ogg"  # Tumhari asli awaz
@@ -107,6 +115,9 @@ def main():
     desc = f"""{topic}\n\n{script}\n\n#AI #Tech #CyberSecurity"""
     with open(f"{OUTPUT_FOLDER}/description_{today}.txt", "w", encoding="utf-8") as f:
         f.write(desc)
+    # UPLOAD KE LIYE - upload_info.json banana jaruri hai
+    with open("upload_info.json", "w", encoding="utf-8") as f:
+        json.dump({"title": topic, "description": desc, "video": video_file}, f)
     print("HO GAYA! Talking Avatar Video Ready!")
 
 if __name__ == "__main__":
