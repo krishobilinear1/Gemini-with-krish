@@ -1,188 +1,326 @@
-# automation.py - TALKING AVATAR - FINAL
-# Avatar = avatar.jpg - FIXED
-# Voice = voice_sample.ogg - AAPKI ASLI AWAZ - CLONE - FIXED 1.20x
+import os
+import json
+import subprocess
+import requests
+from PIL import Image
+from pydub import AudioSegment
+from faster_whisper import WhisperModel
+import soundfile as sf
+from f5_tts.infer.utils_infer import infer_process, load_model, load_vocoder
 
-import os, json, random, datetime, asyncio
+# --- CONFIGURATION ---
+OUTPUT_DIR = "output"
+ASSETS_DIR = "assets"
+REFERENCE_VOICE = f"{ASSETS_DIR}/voice_sample.ogg" # Your GitHub voice clone
+AVATAR_IMAGE = f"{ASSETS_DIR}/avatar.png"          # Your single photo avatar
 
-# --- ANTIALIAS FIX ---
-try:
-    import PIL.Image
-    if not hasattr(PIL.Image, 'ANTIALIAS'):
-        PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
-except:
-    pass
+VIDEO_WIDTH = 1920
+VIDEO_HEIGHT = 1080
+AVATAR_SIZE = 600
 
-# --- LOCKED - MAT BADALNA ---
-AVATAR_PHOTO = "avatar.jpg"  # Aapki Suit wali photo
-VOICE_SAMPLE = "voice_sample.ogg"  # Aapki asli awaz
-VOICE_SPEED = "+20%"  # 1.20x Speed - LOCKED
-USED_FILE = "used_topics.json"
-OUTPUT_FOLDER = "videos"
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
-# --- TOPICS + HAR TOPIC KA APNA POORA SCRIPT ---
 TOPICS_SCRIPTS = {
-    "AI Voice Clone se 50000 ka Fraud - Naya Scam | Latest News": """Rukiye! Aapke papa ka phone aaya, bola beta 50000 bhej de, accident ho gaya hai. Awaz bilkul papa jaisi thi, lekin wo papa the hi nahi.
-Ye hai AI Voice Clone Scam. Chor aapki Instagram reel se 10 second ki awaz utha kar, AI se poori awaz bana lete hain.
-Isse bachne ke liye, apne parivar me ek Secret Code Word bana lijiye. Jaise - Papa ko boliye, agar asli emergency hai to 'Neela Tota' bolna. Code word nahi bola, to paisa nahi bhejna.""",
-
-    "WhatsApp pe Job Offer wala Naya Scam - Telegram Task Fraud | Latest": """Ek message aaya - Ghar baithe 5000 roz kamao, bas YouTube ko like karna hai. Pehle din 500 rupaye bhi aa gaye. Dusre din bola, 10000 lagao, 20000 milenge. Bas yahi pe khel khatam.
-Ye hai Task Fraud. Pehle chhota paisa dekar lalach dete hain, phir bada paisa lekar gayab ho jate hain.
-Yaad rakhiye, paise kamane ke liye paise lagane wali koi bhi job 100% fraud hai.""",
-
-    "QR Code Scan karte hi Bank Khali - Naya UPI Scam": """Dukaan wale ne bola, paisa wapas karna hai, ye QR code scan kijiye. Aapne scan kiya, PIN dala, aur aapke 20000 gayab.
-Ek baat hamesha yaad rakhiye, paisa lene ke liye kabhi PIN nahi dalna hota. PIN sirf paisa bhejne ke liye hota hai.
-Koi bhi bole QR scan karo, PIN dalo, paisa aayega, to samajh jaiye wo chor hai.""",
-
-    "Google pe Pehla Number wala Fake Customer Care - Naya Fraud": """Google pe customer care number search kiya, pehle wale number pe call kiya, usne bola AnyDesk app download karo. Aapne kiya, aur phone ka poora control uske paas chala gaya.
-Google pe pehla dikhne wala number hamesha sahi nahi hota. Chor paise dekar apna number upar laate hain.
-Customer care number hamesha company ki official website se lijiye.""",
-
-    "Aapki SIM Band ho Jayegi - TRAI Fraud Call | Latest News": """Call aaya, bola main TRAI se bol raha hu, aapki SIM 2 ghante me band ho jayegi, 1 dabaiye. Aapne dabaya, aur aapka OTP chala gaya.
-TRAI, Bank, Police kabhi aise call nahi karte. SIM band karne ki dhamki dene wala 100% chor hai. Call kaat dijiye.""",
-
-    "Aadhaar se Loan Le Liya - KYC Fraud | Cyber Security": """Aapko call aaya, bola main bank se bol raha hu, aapki KYC band ho jayegi, ek link pe click kijiye. Aapne click kiya, aur aapke naam pe 2 lakh ka loan le liya gaya.
-Bank kabhi WhatsApp pe link nahi bhejta. KYC karna hai to seedha bank ki official app ya branch me jaiye.""",
-
-    "Play Store se Fake Loan App - Photo Morphing Blackmail": """Loan app se 2000 liye, 7 din me 5000 mangne lage. Mana kiya to aapki photo ko ganda bana kar, aapke saare contacts ko bhej diya.
-Ye Loan App Scam hai. Ye app aapka poora contact aur gallery chura leti hai.
-Kabhi bhi anjaan loan app download mat kijiye.""",
-
-    "WiFi se Aapka Password Chori - Public WiFi Hack | Cyber Security": """Railway station pe Free WiFi se aapne bank khola. 10 minute baad aapke account se paisa gayab. Kyunki wo Free WiFi hacker ka tha.
-Free WiFi pe kabhi bank, UPI, ya Gmail mat kholiye. Zaroori ho to apne Mobile Data se hi bank chalaiye.""",
-
-    "Aapke Beta ka Video Viral kar dunga - Sextortion Scam": """Video call pe ek ladki aayi, 2 minute baat hui, phir bola 50000 de, nahi to aapka video viral kar dunga.
-Ye Sextortion hai. Dar kar paisa mat dijiye. Paisa dene se wo aur mangenge.
-Turant call kaat kar, us number ko Block kijiye aur 1930 pe call karke report kijiye.""",
-
-    "Instagram pe Blue Tick wali Ladki ka Fraud - Crypto Scam": """Instagram pe ek ladki ne message kiya, meri crypto se roz 10000 ki kamai hoti hai, aap bhi lagao. Aapne 5000 lagaye, app me 15000 dikhne laga. Jab nikalne gaye, to app ne bola aur 20000 tax do.
-Ye app hi nakli tha. Number screen pe badh raha tha, lekin paisa kabhi tha hi nahi.""",
-
-    "Cyber Fraud se kaise bache, naya tarika": """Cyber Fraud ab purane tarike se nahi, naye AI wale tarike se ho raha hai. Chor ab aapko bank wala banke nahi, aapke dost wala banke call karte hain.
-Isse bachne ke liye ek hi niyam hai - Koi bhi OTP, PIN, ya link mange, to call kaat dijiye, aur khud official number pe call kijiye.""",
-
-    "AI ne naya kaam kar diya, sab hairan": """AI ne naya kaam kar diya hai, ab AI aapki awaz, aapka chehra, sab copy kar sakta hai.
-Isliye ab kisi bhi video ya voice call pe poora bharosa mat kijiye. Agar koi paisa mange, to secret code poochiye.""",
-
-    "Naya Mobile Launch hua, kya hai khaas": """Naya Mobile Launch hua hai, lekin khareedne se pehle ek cheez dekhiye - kya usme aapko sach me naya feature mil raha hai, ya sirf naam naya hai.
-Camera ke megapixel pe mat jaiye, processor aur battery dekhiye.""",
-
-    "Internet pe naya Scam chal raha hai, savdhan": """Internet pe naya Scam chal raha hai, savdhan rahiye. Ab chor aapko lottery, job, aur loan ke naam pe nahi, aapke bachhe ke school ke naam pe call kar rahe hain.
-Bolte hain aapke bachhe ka accident ho gaya, paisa bhejo. Ghabraye nahi, pehle school me call karke confirm kijiye.""",
-
-    "UPI Fraud ka naya tarika aur uska solution": """UPI Fraud ka naya tarika aa gaya hai - Chor aapko paisa bhejne ke liye bolenge, aap PIN dalenge, aur paisa kat jayega.
-Yaad rakhiye, UPI me paisa lene ke liye PIN kabhi nahi dalna hota.""",
-
-    "OTP Fraud se bachne ka asaan tarika": """OTP Fraud se bachne ka asaan tarika sirf ek hai - OTP kisi ko mat batana.
-Bank, Police, Aapka beta, koi bhi OTP mange, to mat dijiye. OTP ka matlab hai - One Time Password, ye sirf aapka hai.""",
-
-    "WhatsApp ka naya update, ye feature aa gaya": """WhatsApp ka naya update aa gaya hai, ab aap apni chat ko lock kar sakte hain, aur kisi ko pata bhi nahi chalega.
-Iske liye chat pe lamba dabaiye, Lock Chat ka option aayega.""",
-
-    "Bank Fraud se bachne ka 1 minute wala solution": """Bank Fraud se bachne ka 1 minute wala solution suniye - Apne bank me jaa kar, International Transaction band kar dijiye, aur ek chhota sa limit laga dijiye, jaise 5000.
-Agar kabhi fraud bhi hua, to bada nuksan nahi hoga.""",
+    "Cyber Fraud Alert": {
+        "text": "Alert! {{ONLINE SCAMMERS}} are using voice cloning. Never share your {{OTP}} or PIN.",
+        "visual_query": "scary hacker computer matrix background"
+    }
 }
 
-TOPICS = list(TOPICS_SCRIPTS.keys())
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(ASSETS_DIR, exist_ok=True)
 
-def get_new_topic():
-    if os.path.exists(USED_FILE):
-        with open(USED_FILE, "r") as f:
-            used = json.load(f)
-    else:
-        used = []
-    fresh = [t for t in TOPICS if t not in used]
-    if not fresh:
-        used = []
-        fresh = TOPICS
-    topic = random.choice(fresh)
-    used.append(topic)
-    with open(USED_FILE, "w") as f:
-        json.dump(used, f)
-    return topic
+# --- 1. VOICE CLONING (F5-TTS) ---
+def generate_voice(script_text, output_audio_path):
+    print("Generating cloned voice...")
+    # Clean text for synthesis
+    clean_text = script_text.replace("{{", "").replace("}}", "")
+    temp_raw = output_audio_path.replace(".wav", "_raw.wav")
+    
+    model = load_model("F5-TTS", "F5TTS_Base", device="cpu") # Switch to cuda if available
+    vocoder = load_vocoder(device="cpu")
+    
+    wav, sr, _ = infer_process(
+        ref_audio=REFERENCE_VOICE,
+        ref_text="This is a reference text.", # Adjust as needed
+        gen_text=clean_text,
+        model=model,
+        vocoder=vocoder,
+        speed=1.2, # Fast paced news style
+        device="cpu"
+    )
+    sf.write(temp_raw, wav, sr)
+    
+    # Process audio for punchy broadcast sound
+    audio = AudioSegment.from_wav(temp_raw)
+    compressed = audio.compress_dynamic_range(threshold=-16.0, ratio=3.0)
+    compressed.export(output_audio_path, format="wav")
+    os.remove(temp_raw)
 
-def make_script(topic):
-    hooks = [
-        "Dekho bhai! Ye cheez aapko pata honi chahiye,",
-        "Ruko ruko! Ye video mat chhodna,",
-        "Dekho bhai, ye bahut important hai,",
+# --- 2. LIP SYNC (MuseTalk/LivePortrait placeholder) ---
+def generate_avatar_video(audio_path, output_video_path):
+    print("Generating talking avatar...")
+    # In real pipeline, call MuseTalk or LivePortrait CLI here
+    # Mocking video generation using image and audio loop for demonstration
+    cmd = [
+        "ffmpeg", "-loop", "1", "-i", AVATAR_IMAGE,
+        "-i", audio_path, "-c:v", "libx264", "-tune", "stillimage",
+        "-c:a", "aac", "-b:a", "192k", "-pix_fmt", "yuv420p",
+        "-shortest", "-y", output_video_path
     ]
-    hook = random.choice(hooks)
-    body = TOPICS_SCRIPTS.get(topic, topic)
-    script = f"""{hook} {body}
-    Ye video apne dost ko bhi bhej dijiye, usko bhi pata chale.
-    Video pasand aaya to Like karo, Share karo aur Subscribe karna mat bhoolna.
-    """
-    return script
+    subprocess.run(cmd, check=True)
 
-async def make_voice(script, audio_file):
-    # AAPKI ASLI AWAZ - voice_sample.ogg se clone
-    print("Aapki asli awaz se bol raha hu...")
+# --- 3. DYNAMIC B-ROLL (Pexels API) ---
+def fetch_broll(query, output_image_path):
+    print(f"Fetching B-roll for: {query}")
+    api_key = "YOUR_PEXELS_API_KEY" # Replace with user's key
+    headers = {"Authorization": api_key}
+    url = f"https://api.pexels.com/v1/search?query={query}&per_page=1&orientation=landscape"
+    
     try:
-        from TTS.api import TTS
-        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
-        tts.tts_to_file(text=script, speaker_wav=VOICE_SAMPLE, language="hi", file_path=audio_file)
-        print(f"Awaz ban gayi - AAPKI AWAZ: {audio_file}")
+        res = requests.get(url, headers=headers, timeout=10).json()
+        img_url = res["photos"][0]["src"]["large2x"]
+        img_data = requests.get(img_url).content
+        with open(output_image_path, "wb") as f:
+            f.write(img_data)
+        
+        # Resize to 1080p
+        im = Image.open(output_image_path)
+        im = im.resize((VIDEO_WIDTH, VIDEO_HEIGHT), Image.Resampling.LANCZOS)
+        im.save(output_image_path)
     except Exception as e:
-        print(f"Clone me dikkat, Madhur se bana raha hu: {e}")
-        import edge_tts
-        communicate = edge_tts.Communicate(script, voice="hi-IN-MadhurNeural", rate=VOICE_SPEED, pitch="+0Hz")
-        await communicate.save(audio_file)
+        print(f"B-roll fetch failed, using fallback canvas: {e}")
+        img = Image.new("RGB", (VIDEO_WIDTH, VIDEO_HEIGHT), color=(20, 24, 33))
+        img.save(output_image_path)
 
-def make_talking_video(avatar_path, audio_path, output_path):
-    # FREE WALA TALKING AVATAR
-    print(f"Talking Video ban raha hai...")
-    print(f"Avatar: {avatar_path}")
-    print(f"Audio: {audio_path}")
-    try:
-        from moviepy.editor import ImageClip, AudioFileClip
-        audio = AudioFileClip(audio_path)
-        clip = ImageClip(avatar_path).set_duration(audio.duration)
-        clip = clip.set_audio(audio)
-        # FIX: Zoom wali resize line hatayi - wahi video faad rahi thi
-        clip = clip.resize((720, 1280))
-        # FIX: pix_fmt yuv420p - Isi se lines wali galti aati thi
-        clip.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"])
-        print(f"Talking Video Ready: {output_path}")
-        return True
-    except Exception as e:
-        print(f"Video banane me dikkat: {e}")
-        return False
+# --- 4. CAPTION GENERATION (Whisper) ---
+def generate_subtitles(audio_path, script_text, output_ass_path):
+    print("Generating word-level subtitles...")
+    model = WhisperModel("base", device="cpu")
+    segments, _ = model.transcribe(audio_path, word_timestamps=True)
+    
+    ass_header = (
+        "[Script Info]\nPlayResX: 1920\nPlayResY: 1080\n\n"
+        "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, Alignment, MarginV\n"
+        "Style: Default,Arial Black,60,&H00FFFFFF,&H00000000,2,100\n"
+        "Style: Highlight,Arial Black,66,&H0000FFFF,&H00000000,2,100\n\n"
+        "[Events]\nFormat: Layer, Start, End, Style, Text\n"
+    )
+    
+    events = []
+    for segment in segments:
+        for word in segment.words:
+            clean_word = word.word.strip().replace("{{", "").replace("}}", "")
+            is_highlight = "{{" in word.word or "}}" in word.word
+            style = "Highlight" if is_highlight else "Default"
+            
+            s_time = f"{int(word.start//3600):01d}:{int((word.start%3600)//60):02d}:{word.start%60:05.2f}"
+            e_time = f"{int(word.end//3600):01d}:{int((word.end%3600)//60):02d}:{word.end%60:05.2f}"
+            
+            events.append(f"Dialogue: 0,{s_time},{e_time},{style},,{clean_word}")
+            
+    with open(output_ass_path, "w", encoding="utf-8") as f:
+        f.write(ass_header + "\n".join(events))
 
+# --- 5. COMPOSITING (FFmpeg) ---
+def compose_video(broll_path, avatar_path, ass_path, output_final_path):
+    print("Compositing final video...")
+    cmd = [
+        "ffmpeg", "-y",
+        "-loop", "1", "-t", "10", "-i", broll_path, # B-roll loop
+        "-i", avatar_path,                         # Talking avatar
+        "-filter_complex",
+        f"[1:v]scale={AVATAR_SIZE}:-1,format=yuva420p[av];"
+        f"[0:v][av]overlay=W-w-50:H-h-50[ov];"      # Overlay at bottom right
+        f"[ov]ass={ass_path}[finalv]",             # Burn subtitles
+        "-map", "[finalv]", "-map", "1:a",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+        "-c:a", "copy", "-shortest", output_final_path
+    ]
+    subprocess.run(cmd, check=True)
+
+# --- MAIN EXECUTION ---
 def main():
-    topic = get_new_topic()
-    script = make_script(topic)
-    today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-    audio_file = f"{OUTPUT_FOLDER}/voice_{today}.mp3"
-    video_file = f"{OUTPUT_FOLDER}/talking_{today}.mp4"
+    topic = "Cyber Fraud Alert"
+    data = TOPICS_SCRIPTS[topic]
+    script = data["text"]
+    query = data["visual_query"]
     
-    print(f"Avatar: {AVATAR_PHOTO} - FIXED BOLEGA")
-    print(f"Topic: {topic}")
+    audio_file = f"{OUTPUT_DIR}/narration.wav"
+    avatar_video = f"{OUTPUT_DIR}/avatar_talking.mp4"
+    broll_image = f"{OUTPUT_DIR}/broll.jpg"
+    ass_file = f"{OUTPUT_DIR}/subtitles.ass"
+    final_output = f"{OUTPUT_DIR}/final_automation_video.mp4"
     
-    asyncio.run(make_voice(script, audio_file))
-    make_talking_video(AVATAR_PHOTO, audio_file, video_file)
+    generate_voice(script, audio_file)
+    generate_avatar_video(audio_file, avatar_video)
+    fetch_broll(query, broll_image)
+    generate_subtitles(audio_file, script, ass_file)
+    compose_video(broll_image, avatar_video, ass_file, final_output)
     
-    desc = f"""{topic}
+    print(f"Pipeline Complete! Video saved to {final_output}")
 
-{script}
+if __name__ == "__main__":
+    main()
 
----
-Cyber Security Hindi | Latest News | Fraud Se Bacho
+इसे कॉपी करके GitHubक्षमा करें, तकनीकी बाधा के कारण कोड आप तक नहीं पहुँच पाया। मैं इसे फिर से भेज रहा हूँ।
+import os
+import json
+import subprocess
+import requests
+from PIL import Image
+from pydub import AudioSegment
+from faster_whisper import WhisperModel
+import soundfile as sf
+from f5_tts.infer.utils_infer import infer_process, load_model, load_vocoder
 
-#AI #Tech #CyberSecurity #Hindi #FraudSeBacho #LatestNews #News #UPIFraud #OnlineScam #CyberFraud"""
-    with open(f"{OUTPUT_FOLDER}/description_{today}.txt", "w", encoding="utf-8") as f:
-        f.write(desc)
-    # UPLOAD KE LIYE - upload_info.json banana jaruri hai - TAGS KE SAATH
-    with open("upload_info.json", "w", encoding="utf-8") as f:
-        json.dump({
-            "title": topic,
-            "description": desc,
-            "video": video_file,
-            "tags": ["AI", "Tech", "CyberSecurity", "Hindi", "FraudSeBacho", "LatestNews", "News", "UPIFraud", "OnlineScam"],
-            "privacyStatus": "private",
-            "categoryId": "27"
-        }, f, ensure_ascii=False, indent=2)
-    print("HO GAYA! Talking Avatar Video Ready!")
+# --- CONFIGURATION ---
+OUTPUT_DIR = "output"
+ASSETS_DIR = "assets"
+REFERENCE_VOICE = f"{ASSETS_DIR}/voice_sample.ogg" # Your GitHub voice clone
+AVATAR_IMAGE = f"{ASSETS_DIR}/avatar.png"          # Your single photo avatar
+
+VIDEO_WIDTH = 1920
+VIDEO_HEIGHT = 1080
+AVATAR_SIZE = 600
+
+TOPICS_SCRIPTS = {
+    "Cyber Fraud Alert": {
+        "text": "Alert! {{ONLINE SCAMMERS}} are using voice cloning. Never share your {{OTP}} or PIN.",
+        "visual_query": "scary hacker computer matrix background"
+    }
+}
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(ASSETS_DIR, exist_ok=True)
+
+# --- 1. VOICE CLONING (F5-TTS) ---
+def generate_voice(script_text, output_audio_path):
+    print("Generating cloned voice...")
+    # Clean text for synthesis
+    clean_text = script_text.replace("{{", "").replace("}}", "")
+    temp_raw = output_audio_path.replace(".wav", "_raw.wav")
+    
+    model = load_model("F5-TTS", "F5TTS_Base", device="cpu") # Switch to cuda if available
+    vocoder = load_vocoder(device="cpu")
+    
+    wav, sr, _ = infer_process(
+        ref_audio=REFERENCE_VOICE,
+        ref_text="This is a reference text.", # Adjust as needed
+        gen_text=clean_text,
+        model=model,
+        vocoder=vocoder,
+        speed=1.2, # Fast paced news style
+        device="cpu"
+    )
+    sf.write(temp_raw, wav, sr)
+    
+    # Process audio for punchy broadcast sound
+    audio = AudioSegment.from_wav(temp_raw)
+    compressed = audio.compress_dynamic_range(threshold=-16.0, ratio=3.0)
+    compressed.export(output_audio_path, format="wav")
+    os.remove(temp_raw)
+
+# --- 2. LIP SYNC (MuseTalk/LivePortrait placeholder) ---
+def generate_avatar_video(audio_path, output_video_path):
+    print("Generating talking avatar...")
+    # In real pipeline, call MuseTalk or LivePortrait CLI here
+    # Mocking video generation using image and audio loop for demonstration
+    cmd = [
+        "ffmpeg", "-loop", "1", "-i", AVATAR_IMAGE,
+        "-i", audio_path, "-c:v", "libx264", "-tune", "stillimage",
+        "-c:a", "aac", "-b:a", "192k", "-pix_fmt", "yuv420p",
+        "-shortest", "-y", output_video_path
+    ]
+    subprocess.run(cmd, check=True)
+
+# --- 3. DYNAMIC B-ROLL (Pexels API) ---
+def fetch_broll(query, output_image_path):
+    print(f"Fetching B-roll for: {query}")
+    api_key = "YOUR_PEXELS_API_KEY" # Replace with user's key
+    headers = {"Authorization": api_key}
+    url = f"https://api.pexels.com/v1/search?query={query}&per_page=1&orientation=landscape"
+    
+    try:
+        res = requests.get(url, headers=headers, timeout=10).json()
+        img_url = res["photos"][0]["src"]["large2x"]
+        img_data = requests.get(img_url).content
+        with open(output_image_path, "wb") as f:
+            f.write(img_data)
+        
+        # Resize to 1080p
+        im = Image.open(output_image_path)
+        im = im.resize((VIDEO_WIDTH, VIDEO_HEIGHT), Image.Resampling.LANCZOS)
+        im.save(output_image_path)
+    except Exception as e:
+        print(f"B-roll fetch failed, using fallback canvas: {e}")
+        img = Image.new("RGB", (VIDEO_WIDTH, VIDEO_HEIGHT), color=(20, 24, 33))
+        img.save(output_image_path)
+
+# --- 4. CAPTION GENERATION (Whisper) ---
+def generate_subtitles(audio_path, script_text, output_ass_path):
+    print("Generating word-level subtitles...")
+    model = WhisperModel("base", device="cpu")
+    segments, _ = model.transcribe(audio_path, word_timestamps=True)
+    
+    ass_header = (
+        "[Script Info]\nPlayResX: 1920\nPlayResY: 1080\n\n"
+        "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, Alignment, MarginV\n"
+        "Style: Default,Arial Black,60,&H00FFFFFF,&H00000000,2,100\n"
+        "Style: Highlight,Arial Black,66,&H0000FFFF,&H00000000,2,100\n\n"
+        "[Events]\nFormat: Layer, Start, End, Style, Text\n"
+    )
+    
+    events = []
+    for segment in segments:
+        for word in segment.words:
+            clean_word = word.word.strip().replace("{{", "").replace("}}", "")
+            is_highlight = "{{" in word.word or "}}" in word.word
+            style = "Highlight" if is_highlight else "Default"
+            
+            s_time = f"{int(word.start//3600):01d}:{int((word.start%3600)//60):02d}:{word.start%60:05.2f}"
+            e_time = f"{int(word.end//3600):01d}:{int((word.end%3600)//60):02d}:{word.end%60:05.2f}"
+            
+            events.append(f"Dialogue: 0,{s_time},{e_time},{style},,{clean_word}")
+            
+    with open(output_ass_path, "w", encoding="utf-8") as f:
+        f.write(ass_header + "\n".join(events))
+
+# --- 5. COMPOSITING (FFmpeg) ---
+def compose_video(broll_path, avatar_path, ass_path, output_final_path):
+    print("Compositing final video...")
+    cmd = [
+        "ffmpeg", "-y",
+        "-loop", "1", "-t", "10", "-i", broll_path, # B-roll loop
+        "-i", avatar_path,                         # Talking avatar
+        "-filter_complex",
+        f"[1:v]scale={AVATAR_SIZE}:-1,format=yuva420p[av];"
+        f"[0:v][av]overlay=W-w-50:H-h-50[ov];"      # Overlay at bottom right
+        f"[ov]ass={ass_path}[finalv]",             # Burn subtitles
+        "-map", "[finalv]", "-map", "1:a",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "22",
+        "-c:a", "copy", "-shortest", output_final_path
+    ]
+    subprocess.run(cmd, check=True)
+
+# --- MAIN EXECUTION ---
+def main():
+    topic = "Cyber Fraud Alert"
+    data = TOPICS_SCRIPTS[topic]
+    script = data["text"]
+    query = data["visual_query"]
+    
+    audio_file = f"{OUTPUT_DIR}/narration.wav"
+    avatar_video = f"{OUTPUT_DIR}/avatar_talking.mp4"
+    broll_image = f"{OUTPUT_DIR}/broll.jpg"
+    ass_file = f"{OUTPUT_DIR}/subtitles.ass"
+    final_output = f"{OUTPUT_DIR}/final_automation_video.mp4"
+    
+    generate_voice(script, audio_file)
+    generate_avatar_video(audio_file, avatar_video)
+    fetch_broll(query, broll_image)
+    generate_subtitles(audio_file, script, ass_file)
+    compose_video(broll_image, avatar_video, ass_file, final_output)
+    
+    print(f"Pipeline Complete! Video saved to {final_output}")
 
 if __name__ == "__main__":
     main()
