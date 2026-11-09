@@ -1,56 +1,60 @@
-import json, os, random
-from google.oauth2.credentials import Credentials
+import os, json, shutil
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from google.oauth2.credentials import Credentials
+
+# bg.png ko hi thumbnail bana do - automation.py ko chhedna nahi hai
+if not os.path.exists("thumbnail.jpg"):
+    if os.path.exists("bg.png"):
+        # bg.png ko thumbnail.jpg me copy karo
+        from PIL import Image
+        img = Image.open("bg.png")
+        img = img.convert("RGB")
+        img.save("thumbnail.jpg", "JPEG")
+        print("Thumbnail ban gaya bg.png se")
+    else:
+        print("bg.png bhi nahi mila, thumbnail skip")
 
 with open("upload_info.json", encoding="utf-8") as f:
     info = json.load(f)
 
-# --- FIX: Token me agar Enter / Space aa gaya ho to saaf karo ---
-raw_token = os.environ["YOUTUBE_TOKEN_JSON"].strip()
-try:
-    token_data = json.loads(raw_token, strict=False)
-except:
-    # Double escaping fix
-    token_data = json.loads(raw_token.encode().decode('unicode_escape'), strict=False)
-
-print(f"Token loaded OK for: {token_data.get('client_id','')[:20]}...")
-
-creds = Credentials.from_authorized_user_info(token_data, scopes=["https://www.googleapis.com/auth/youtube.upload"])
+token_info = json.loads(os.environ["YOUTUBE_TOKEN_JSON"])
+creds = Credentials.from_authorized_user_info(token_info)
 youtube = build("youtube", "v3", credentials=creds)
 
-# --- SEO DESCRIPTION BUILDER ---
-base_desc = info["description"]
-
-seo_hashtags = "\n\n#CyberSecurity #CyberAttack #FraudAlert #OnlineFraud #HackingNews #TechNews #NewLaunch #AIScam #DigitalIndia #StaySafeOnline #ViralShorts #Trending #HindiTech #KrishTech"
-
-seo_footer = "\n\n⚠️ Aise hi naye Fraud, Hacking News aur New Launch ke liye Subscribe karo - Gemini-with-krish\n\nDisclaimer: Ye video sirf jaankari aur awareness ke liye hai."
-
-full_description = base_desc + seo_footer + seo_hashtags
-
-# --- SEO TAGS ---
-extra_tags = ["cyber security", "fraud alert", "online fraud", "hacking news", "tech news hindi", "new launch", "cyber attack", "ai scam", "stay safe online", "digital fraud"]
-all_tags = list(dict.fromkeys(info.get("tags", []) + extra_tags))[:30]
-
-# --- HOOK WALE TITLE KO AUR STRONG KARO ---
-title = info["title"][:100]
-
-request = youtube.videos().insert(
+print("Uploading short.mp4...")
+req = youtube.videos().insert(
     part="snippet,status",
     body={
         "snippet": {
-            "title": title,
-            "description": full_description,
-            "tags": all_tags,
-            "categoryId": "28",
-            "defaultLanguage": "hi",
+            "title": info["title"],
+            "description": info["description"],
+            "tags": info["tags"],
+            "categoryId": "28"
         },
-        "status": {"privacyStatus": "unlisted", "selfDeclaredMadeForKids": False}
+        "status": {
+            "privacyStatus": "public",
+            "madeForKids": False,
+            "selfDeclaredMadeForKids": False
+        }
     },
     media_body=MediaFileUpload("short.mp4", chunksize=-1, resumable=True)
 )
-res = request.execute()
-print(f"UPLOADED! Video ID: {res['id']}")
+res = req.execute()
+video_id = res["id"]
+print(f"UPLOADED! Video ID: {video_id}")
 
-youtube.thumbnails().set(videoId=res['id'], media_body=MediaFileUpload("thumbnail.jpg")).execute()
-print("Thumbnail lag gaya!")
+# Thumbnail lagao - agar hai to
+if os.path.exists("thumbnail.jpg"):
+    try:
+        youtube.thumbnails().set(
+            videoId=video_id,
+            media_body=MediaFileUpload("thumbnail.jpg")
+        ).execute()
+        print("Thumbnail lag gaya!")
+    except Exception as e:
+        print(f"Thumbnail fail, par video upload ho gaya: {e}")
+else:
+    print("Thumbnail nahi mila, video bina thumbnail ke upload hua")
+
+print("DONE! ALL FINISHED")
