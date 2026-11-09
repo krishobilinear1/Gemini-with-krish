@@ -35,7 +35,40 @@ def generate_voice(script_text, output_audio_path):
     clean_text = script_text.replace("{{", "").replace("}}", "")
     temp_raw = output_audio_path.replace(".wav", "_raw.wav")
     
-    model = load_model("F5-TTS", "F5TTS_Base", device="cpu") # Switch to cuda if available
+    async def generate_voice(script, audio_file):
+    print("Generating cloned voice...")
+    try:
+        # F5-TTS - AAPKI ASLI AWAZ wala kaam
+        from f5_tts.infer.utils_infer import infer_process, load_model, load_vocoder
+
+        # Aapki awaz ka sample - ye file repo me honi chahiye
+        ref_audio = "voice_sample.ogg"
+        ref_text = "Namaste doston, aaj hum ek bahut hi zaroori baat karne wale hain."
+
+        # F5 ka sahi tarika - load_model ko alag se bulane ki zarurat nahi hai
+        # infer_process khud hi model load kar lega
+        infer_process(
+            ref_audio,
+            ref_text,
+            script,
+            model_type="F5-TTS",
+            ckpt_file="",  # Khali rakhenge, to ye apne aap official model download kar lega
+            output_dir=".",
+            output_file=audio_file,
+            device="cpu",
+            speed=1.0,
+        )
+        print(f"Awaz ban gayi - AAPKI AWAZ: {audio_file}")
+        return True
+
+    except Exception as e:
+        print(f"F5 me dikkat, Madhur se bana raha hu: {e}")
+        # Fallback - Agar F5 fail bhi hua, to video rukega nahi
+        import edge_tts
+        communicate = edge_tts.Communicate(script, voice="hi-IN-MadhurNeural", rate="+0%", pitch="+0Hz")
+        await communicate.save(audio_file)
+        print(f"Awaz ban gayi - Madhur: {audio_file}")
+        return True # Switch to cuda if available
     vocoder = load_vocoder(device="cpu")
     
     wav, sr, _ = infer_process(
