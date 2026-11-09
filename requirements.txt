@@ -1,10 +1,9 @@
-gTTS2.5.4
-google-api-python-client2.154.0
-google-auth2.32.0
-google-auth-oauthlib1.2.1
-Pillow9.5.0
-moviepy1.0.3
-numpy==1.26.4
+google-api-python-client
+google-auth
+google-auth-oauthlib
+Pillow
+moviepy
+numpy
 edge-tts
 librosa
 TTS
@@ -14,3 +13,4 @@ faster-whisper>=1.0.0
 requests
 torch
 torchaudio
+gTTS
