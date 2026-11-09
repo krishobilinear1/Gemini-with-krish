@@ -2,7 +2,7 @@ gTTS==2.5.4
 google-api-python-client==2.154.0
 google-auth==2.32.0
 google-auth-oauthlib==1.2.1
-Pillow==10.4.0
+Pillow==9.5.0
 moviepy==1.0.3
 numpy==1.26.4
 edge-tts
