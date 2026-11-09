@@ -17,7 +17,7 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
-          pip install google-genai edge-tts gTTS moviepy pillow requests google-api-python-client google-auth-oauthlib
+          pip install google-genai edge-tts gTTS moviepy==1.0.3 pillow requests google-api-python-client google-auth-oauthlib imageio-ffmpeg==0.5.1
       - name: Run automation
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
