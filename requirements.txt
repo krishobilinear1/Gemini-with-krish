@@ -34,3 +34,6 @@ imageio-ffmpeg
 pydub
 faster-whisper
 f5-tts
+google-api-python-client
+google-auth
+google-auth-oauthlib
