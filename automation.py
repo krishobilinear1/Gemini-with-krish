@@ -29,30 +29,55 @@ def get_script_from_gemini():
         return script2, "Free WiFi Ne Aapka Bank Khali Kar Diya? | Aaj Hi Bachiye", "Free WiFi Hack, Cyber Security, Hindi News"
 
 # --- 1. VOICE - AAPKI AWAZ FIX ---
+# --- 1. VOICE - AAPKI AWAZ FIX - FINAL ---
 async def generate_voice(script_text, output_audio_path):
     print("Generating cloned voice...")
     os.makedirs("output", exist_ok=True)
     clean_text = script_text.replace("{{", "").replace("}}", "")
-    # Pehle AAPKI awaz try karenge, F5-TTS ke naye tarike se
+    # Pehle AAPKI awaz try karenge, F5-TTS ke bilkul naye tarike se
     try:
         from f5_tts.infer.utils_infer import infer_process, load_model, load_vocoder
+        import inspect
         ref_audio = REFERENCE_VOICE
         if not os.path.exists(ref_audio):
             ref_audio = "voice_sample.ogg"
         print(f"Reference voice use kar raha hu: {ref_audio}")
         ref_text = "Namaste doston, aaj hum ek bahut hi zaroori baat karne wale hain."
-        # Naya F5 - isme model_type nahi bhejte, isliye pichhli baar error aaya tha
-        model = load_model(model_type="F5-TTS", device="cpu")
-        vocoder = load_vocoder(device="cpu")
-        wav, sr, _ = infer_process(
-            ref_audio=ref_audio,
-            ref_text=ref_text,
-            gen_text=clean_text,
-            model=model,
-            vocoder=vocoder,
-            speed=1.0,
-            device="cpu"
-        )
+
+        # load_model me kya chalta hai, ye pehle dekh lete hain, andaza nahi lagayenge
+        print(f"load_model ke arguments: {inspect.signature(load_model)}")
+        print(f"infer_process ke arguments: {inspect.signature(infer_process)}")
+
+        # Koshish 1 - Bina koi argument ke, sabse naya tarika
+        try:
+            model = load_model()
+            vocoder = load_vocoder()
+        except Exception as e1:
+            print(f"load_model() bina argument ke fail: {e1}, ab device ke saath try kar raha hu")
+            model = load_model(device="cpu")
+            vocoder = load_vocoder(device="cpu")
+
+        # infer_process ko bhi usi hisaab se bulayenge
+        try:
+            wav, sr, _ = infer_process(
+                ref_audio=ref_audio,
+                ref_text=ref_text,
+                gen_text=clean_text,
+                model=model,
+                vocoder=vocoder,
+                speed=1.0,
+                device="cpu"
+            )
+        except TypeError as e2:
+            print(f"infer_process pehle tarike se fail: {e2}, ab doosre tarike se try kar raha hu")
+            wav, sr, _ = infer_process(
+                ref_audio,
+                ref_text,
+                clean_text,
+                model,
+                vocoder
+            )
+
         import soundfile as sf
         sf.write(output_audio_path, wav, sr)
         print(f"Awaz ban gayi - AAPKI CLONED AWAZ: {output_audio_path}")
