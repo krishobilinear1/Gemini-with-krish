@@ -180,4 +180,27 @@ def main():
     print(f"Pipeline Complete! Video saved to {final_output}")
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+
+async def main():
+    import os
+    os.makedirs("output", exist_ok=True)
+
+    print("Script bana raha hu...")
+    script = get_script_from_gemini()
+    print(f"Script: {script[:100]}...")
+
+    audio_file = "output/narration.wav"
+    avatar_video = "output/avatar_talking.mp4"
+
+    # Yahan await lagana sabse zaroori hai
+    await generate_voice(script, audio_file)
+
+    print("Awaz ban gayi, ab video bana raha hu...")
+    generate_avatar_video(audio_file, avatar_video)
+
+    print("Video ban gaya, ab upload kar raha hu...")
+    upload_to_youtube(avatar_video, script)
+
+if __name__ == "__main__":
+    asyncio.run(main())
