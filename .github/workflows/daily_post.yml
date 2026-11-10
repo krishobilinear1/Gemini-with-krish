@@ -27,7 +27,12 @@ jobs:
           venv/bin/pip install --upgrade pip setuptools wheel
           venv/bin/pip install -r requirements.txt
           venv/bin/pip install --upgrade "numpy>=2.0" pyarrow
-
+      - name: YouTube Secrets se file banao
+        run: |
+          echo '${{ secrets.YOUTUBE_TOKEN_JSON }}' > token.json
+          echo '${{ secrets.YOUTUBE_CLIENT_SECRETS_JSON }}' > client_secret.json
+          ls -lh token.json client_secret.json
+    
       - name: Run automation
         run: |
           venv/bin/python automation.py
